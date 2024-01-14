@@ -42,7 +42,6 @@ class WordTrick(QWidget):
 
         self.grid = QGridLayout()
         self.tabWidget = QTabWidget(self)
-
         self.tab1 = QWidget(self)
         self.tab1.layout = QGridLayout(self)
         self.tab1.setLayout(self.tab1.layout)
