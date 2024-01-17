@@ -8,7 +8,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QGridLayout, QVBoxLayout
+import yfinance as yf
 
+
+msft = yf.Ticker("MSFT")
 class Authorize(QWidget):
     def __init__(self, main):
         super().__init__()
@@ -56,6 +59,9 @@ class Authorize(QWidget):
         password = self.password_edit.text()
         login = self.login_edit.text()
 
+class TimeAxisItem(pg.AxisItem):
+    def tickStrings(self, values, scale, spacing):
+        return [datetime.fromtimestamp(value) for value in values]
 
 class App(QWidget):
     def __init__(self):
@@ -153,6 +159,16 @@ class App(QWidget):
         self.tabWidget.addTab(self.tab5, 'Настройки')
         self.grid.addWidget(self.tabWidget, 0, 0)
         self.setLayout(self.grid)
+
+        hist = msft.history(period='1mo')
+        hist['Date'] = hist.index
+        date = hist.loc[:, 'Date'].tolist()
+        values = hist.loc[:, 'Open'].tolist()
+
+        date_axis = TimeAxisItem(orientation='bottom')
+        self.graph1.setAxisItems({'bottom': date_axis})
+        self.graph1.plot(x=[i.timestamp() for i in date], y=values)
+
 
     def authorize(self):
         self.dialog = Authorize(self)
