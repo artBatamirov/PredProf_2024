@@ -2,6 +2,7 @@ import sys
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLineEdit, QMainWindow, QTabWidget, QListWidget, \
     QDateEdit, QLayout, QGraphicsView, QTextEdit
+from pandas import Timestamp
 from PyQt5.QtGui import QFont
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
@@ -9,6 +10,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QGridLayout, QVBoxLayout
 import yfinance as yf
+import timestamp
+import numpy
+import time
+from datetime import datetime, timedelta
 
 
 msft = yf.Ticker("MSFT")
@@ -71,7 +76,6 @@ class App(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.authorize()
 
 
         self.setGeometry(900, 400, 600, 600)
@@ -162,12 +166,18 @@ class App(QWidget):
 
         hist = msft.history(period='1mo')
         hist['Date'] = hist.index
-        date = hist.loc[:, 'Date'].tolist()
+        dates = hist.loc[:, 'Date'].tolist()
         values = hist.loc[:, 'Open'].tolist()
 
-        date_axis = TimeAxisItem(orientation='bottom')
+        date_axis = pg.DateAxisItem()  # TimeAxisItem(orientation='bottom')
+        dates = [datetime.fromtimestamp(x.timestamp()) for x in dates]
+        dates = ["{:%d-%m-%Y %H:%M}".format(date) for date in dates]
+        ticks = [list(zip(range(len(dates)), tuple(dates)))]
+        date_axis.setTicks(ticks)
         self.graph1.setAxisItems({'bottom': date_axis})
-        self.graph1.plot(x=[i.timestamp() for i in date], y=values)
+
+        self.graph1.plot(y=values, pen='r')
+
 
 
     def authorize(self):
