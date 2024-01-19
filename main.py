@@ -10,13 +10,17 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QGridLayout, QVBoxLayout
 import yfinance as yf
-import timestamp
-import numpy
-import time
+
 from datetime import datetime, timedelta
+import sqlite3
+
+# Подключение к БД
+con = sqlite3.connect("trade_bd.sqlite")
+
+# Создание курсора
+cur = con.cursor()
 
 
-msft = yf.Ticker("MSFT")
 class Authorize(QWidget):
     def __init__(self, main):
         super().__init__()
@@ -64,16 +68,20 @@ class Authorize(QWidget):
         password = self.password_edit.text()
         login = self.login_edit.text()
 
-class TimeAxisItem(pg.AxisItem):
-    def tickStrings(self, values, scale, spacing):
-        return [datetime.fromtimestamp(value) for value in values]
-
 class App(QWidget):
     def __init__(self):
         super().__init__()
         self.password = ''
         self.login = ''
+
         self.initUI()
+        self.graps = {self.list1: self.graph1, self.list2: self.graph2, self.list3: self.graph3,
+                      self.list4: self.graph4}
+        self.date_edits = {self.list1: (self.date_start1, self.date_end1),
+                           self.list2: (self.date_start2, self.date_end2),
+                           self.list3: (self.date_start3, self.date_end3),
+                           self.list4: (self.date_start4, self.date_end4)}
+
 
     def initUI(self):
 
@@ -163,20 +171,68 @@ class App(QWidget):
         self.tabWidget.addTab(self.tab5, 'Настройки')
         self.grid.addWidget(self.tabWidget, 0, 0)
         self.setLayout(self.grid)
+        self.list1.clicked.connect(self.show_graph)
+        self.list2.clicked.connect(self.show_graph)
+        self.list3.clicked.connect(self.show_graph)
+        self.list4.clicked.connect(self.show_graph)
+        self.line_1 = None
+        self.line_2 = None
+        self.graph1.showGrid(x=True, y=True)
+        self.show_list()
 
-        hist = msft.history(period='1mo')
+
+
+    def show_list(self):
+        indexes_data = cur.execute("""SELECT name FROM market WHERE type = (SELECT id FROM type WHERE name = 'индексы')""").fetchall()
+        for i in indexes_data:
+            self.list1.addItem(i[0])
+
+        stock_data = cur.execute(
+            """SELECT name FROM market WHERE type = (SELECT id FROM type WHERE name = 'акции')""").fetchall()
+        for i in stock_data:
+            self.list2.addItem(i[0])
+
+        currency_data = cur.execute(
+            """SELECT name FROM market WHERE type = (SELECT id FROM type WHERE name = 'валюта')""").fetchall()
+        for i in currency_data:
+            self.list3.addItem(i[0])
+
+        krypto_data = cur.execute(
+            """SELECT name FROM market WHERE type = (SELECT id FROM type WHERE name = 'криптовалюта')""").fetchall()
+        for i in krypto_data:
+            self.list4.addItem(i[0])
+
+
+    def show_graph(self):
+
+        date_edit = self.date_edits[self.sender()]
+        start = date_edit[0].date().toString('yyyy-MM-dd')
+        end = date_edit[1].date().toString('yyyy-MM-dd')
+        graph = self.graps[self.sender()]
+        graph.removeItem(self.line_1)
+        graph.removeItem(self.line_2)
+        cmp = yf.Ticker(self.sender().currentItem().text())
+
+        hist = cmp.history(period='1mo', start=start, end=end)
         hist['Date'] = hist.index
         dates = hist.loc[:, 'Date'].tolist()
-        values = hist.loc[:, 'Open'].tolist()
+        values_open = hist.loc[:, 'Open'].tolist()
+        values_close = hist.loc[:, 'Close'].tolist()
+        if values_open and values_close:
+            graph.addLegend()
+            graph.getPlotItem().enableAutoRange()
+            date_axis = pg.DateAxisItem()
+            dates = [datetime.fromtimestamp(x.timestamp()) for x in dates]
+            dates = ["{:%d-%m-%Y}".format(date) for date in dates]
+            ticks = [list(zip(range(len(dates)), tuple(dates)))]
+            date_axis.setTicks(ticks)
+            graph.setAxisItems({'bottom': date_axis})
+            self.line_1 = graph.plot(y=values_open, pen='g', name='open')
+            self.line_2 = graph.plot(y=values_close, pen='r', name='close')
 
-        date_axis = pg.DateAxisItem()  # TimeAxisItem(orientation='bottom')
-        dates = [datetime.fromtimestamp(x.timestamp()) for x in dates]
-        dates = ["{:%d-%m-%Y %H:%M}".format(date) for date in dates]
-        ticks = [list(zip(range(len(dates)), tuple(dates)))]
-        date_axis.setTicks(ticks)
-        self.graph1.setAxisItems({'bottom': date_axis})
 
-        self.graph1.plot(y=values, pen='r')
+
+
 
 
 
