@@ -82,10 +82,10 @@ class App(QWidget):
                            self.list2: (self.date_start2, self.date_end2),
                            self.list3: (self.date_start3, self.date_end3),
                            self.list4: (self.date_start4, self.date_end4)}
-        self.ckecks = {self.list1: (self.check_open_1, self.check_close_1, self.check_high_1),
-                        self.list2: (self.check_open_2, self.check_close_2, self.check_high_2),
-                        self.list3: (self.check_open_3, self.check_close_3, self.check_high_3),
-                        self.list4: (self.check_open_4, self.check_close_4, self.check_high_4)}
+        self.ckecks = {self.list1: (self.check_open_1, self.check_close_1, self.check_high_1, self.check_low_1),
+                        self.list2: (self.check_open_2, self.check_close_2, self.check_high_2, self.check_low_2),
+                        self.list3: (self.check_open_3, self.check_close_3, self.check_high_3, self.check_low_3),
+                        self.list4: (self.check_open_4, self.check_close_4, self.check_high_4, self.check_low_4)}
         self.lists = {self.del_btn1: self.list1, self.del_btn2: self.list2, self.del_btn3: self.list3,
                       self.del_btn4: self.list4}
         self.db_inf = {self.add_btn1: (1, 'индекс'), self.add_btn2: (2, 'акцию'), self.add_btn3: (3, 'валюту'),
@@ -105,9 +105,11 @@ class App(QWidget):
         self.check_open_1 = QCheckBox('Open', self)
         self.check_close_1 = QCheckBox('Close', self)
         self.check_high_1 = QCheckBox('High', self)
+        self.check_low_1 = QCheckBox('Low', self)
         self.check_open_1.setChecked(True)
         self.check_close_1.setChecked(True)
         self.check_high_1.setChecked(True)
+        self.check_low_1.setChecked(True)
         self.graph1 = pg.PlotWidget()
 
         self.date_start2 = QDateEdit(self)
@@ -117,9 +119,11 @@ class App(QWidget):
         self.check_open_2 = QCheckBox('Open', self)
         self.check_close_2 = QCheckBox('Close', self)
         self.check_high_2 = QCheckBox('High', self)
+        self.check_low_2 = QCheckBox('Low', self)
         self.check_open_2.setChecked(True)
         self.check_close_2.setChecked(True)
         self.check_high_2.setChecked(True)
+        self.check_low_2.setChecked(True)
         self.graph2 = pg.PlotWidget()
 
         self.date_start3 = QDateEdit(self)
@@ -129,9 +133,11 @@ class App(QWidget):
         self.check_open_3 = QCheckBox('Open', self)
         self.check_close_3 = QCheckBox('Close', self)
         self.check_high_3 = QCheckBox('High', self)
+        self.check_low_3 = QCheckBox('Low', self)
         self.check_open_3.setChecked(True)
         self.check_close_3.setChecked(True)
         self.check_high_3.setChecked(True)
+        self.check_low_3.setChecked(True)
         self.graph3 = pg.PlotWidget()
 
         self.date_start4 = QDateEdit(self)
@@ -141,9 +147,11 @@ class App(QWidget):
         self.check_open_4 = QCheckBox('Open', self)
         self.check_close_4 = QCheckBox('Close', self)
         self.check_high_4 = QCheckBox('High', self)
+        self.check_low_4 = QCheckBox('Low', self)
         self.check_open_4.setChecked(True)
         self.check_close_4.setChecked(True)
         self.check_high_4.setChecked(True)
+        self.check_low_4.setChecked(True)
         self.graph4 = pg.PlotWidget()
 
         self.grid = QGridLayout()
@@ -161,9 +169,10 @@ class App(QWidget):
         self.tab1.layout.addWidget(self.graph1, 2, 0)
         self.tab1.layout.addWidget(self.add_btn1, 3, 2)
         self.tab1.layout.addWidget(self.del_btn1, 4, 2)
-        self.tab1.layout.addWidget(self.check_open_1, 5, 2)
-        self.tab1.layout.addWidget(self.check_close_1, 6, 2)
-        self.tab1.layout.addWidget(self.check_high_1, 7, 2)
+        self.tab1.layout.addWidget(self.check_open_1, 5, 1)
+        self.tab1.layout.addWidget(self.check_close_1, 5, 2)
+        self.tab1.layout.addWidget(self.check_high_1, 6, 1)
+        self.tab1.layout.addWidget(self.check_low_1, 6, 2)
 
         self.tab2 = QWidget(self)
         self.tab2.layout = QGridLayout(self)
@@ -177,9 +186,10 @@ class App(QWidget):
         self.tab2.layout.addWidget(self.graph2, 2, 0)
         self.tab2.layout.addWidget(self.add_btn2, 3, 2)
         self.tab2.layout.addWidget(self.del_btn2, 4, 2)
-        self.tab2.layout.addWidget(self.check_open_2, 5, 2)
-        self.tab2.layout.addWidget(self.check_close_2, 6, 2)
-        self.tab2.layout.addWidget(self.check_high_2, 7, 2)
+        self.tab2.layout.addWidget(self.check_open_2, 5, 1)
+        self.tab2.layout.addWidget(self.check_close_2, 5, 2)
+        self.tab2.layout.addWidget(self.check_high_2, 6, 1)
+        self.tab2.layout.addWidget(self.check_low_2, 6, 2)
 
         self.tab3 = QWidget(self)
         self.tab3.layout = QGridLayout(self)
@@ -193,9 +203,10 @@ class App(QWidget):
         self.tab3.layout.addWidget(self.graph3, 2, 0)
         self.tab3.layout.addWidget(self.add_btn3, 3, 2)
         self.tab3.layout.addWidget(self.del_btn3, 4, 2)
-        self.tab3.layout.addWidget(self.check_open_3, 5, 2)
-        self.tab3.layout.addWidget(self.check_close_3, 6, 2)
-        self.tab3.layout.addWidget(self.check_high_3, 7, 2)
+        self.tab3.layout.addWidget(self.check_open_3, 5, 1)
+        self.tab3.layout.addWidget(self.check_close_3, 5, 2)
+        self.tab3.layout.addWidget(self.check_high_3, 6, 1)
+        self.tab3.layout.addWidget(self.check_low_3, 6, 2)
 
         self.tab4 = QWidget(self)
         self.tab4.layout = QGridLayout(self)
@@ -209,9 +220,10 @@ class App(QWidget):
         self.tab4.layout.addWidget(self.graph4, 2, 0)
         self.tab4.layout.addWidget(self.add_btn4, 3, 2)
         self.tab4.layout.addWidget(self.del_btn4, 4, 2)
-        self.tab4.layout.addWidget(self.check_open_4, 5, 2)
-        self.tab4.layout.addWidget(self.check_close_4, 6, 2)
-        self.tab4.layout.addWidget(self.check_high_4, 7, 2)
+        self.tab4.layout.addWidget(self.check_open_4, 5, 1)
+        self.tab4.layout.addWidget(self.check_close_4, 5, 2)
+        self.tab4.layout.addWidget(self.check_high_4, 6, 1)
+        self.tab4.layout.addWidget(self.check_low_4, 6, 2)
 
         self.tab5 = QWidget(self)
         self.tab5.layout = QVBoxLayout(self)
@@ -231,6 +243,7 @@ class App(QWidget):
         self.line_1 = None
         self.line_2 = None
         self.line_3 = None
+        self.line_4 = None
         self.graph1.showGrid(x=True, y=True)
         self.graph2.showGrid(x=True, y=True)
         self.graph3.showGrid(x=True, y=True)
@@ -287,6 +300,7 @@ class App(QWidget):
         graph.removeItem(self.line_1)
         graph.removeItem(self.line_2)
         graph.removeItem(self.line_3)
+        graph.removeItem(self.line_4)
         cmp = yf.Ticker(self.sender().currentItem().text())
 
         hist = cmp.history(period='1mo', start=start, end=end)
@@ -296,6 +310,7 @@ class App(QWidget):
         values_open = hist.loc[:, 'Open'].tolist()
         values_close = hist.loc[:, 'Close'].tolist()
         values_high = hist.loc[:, 'High'].tolist()
+        values_low = hist.loc[:, 'Low'].tolist()
         if values_open and values_close:
             graph.setTitle(self.sender().currentItem().text(), color="w", size="10pt")
             check_w = self.ckecks[self.sender()]
@@ -312,6 +327,8 @@ class App(QWidget):
                 self.line_2 = graph.plot(y=values_close, pen='r', name='close')
             if check_w[2].isChecked():
                 self.line_3 = graph.plot(y=values_high, pen='b', name='high')
+            if check_w[3].isChecked():
+                self.line_4 = graph.plot(y=values_low, pen='m', name='low')
 
     def add(self):
         inf = self.db_inf[self.sender()]
