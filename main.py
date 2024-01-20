@@ -1,7 +1,7 @@
 import sys
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLineEdit, QMainWindow, QTabWidget, QListWidget, \
-    QDateEdit, QLayout, QGraphicsView, QTextEdit
+    QDateEdit, QLayout, QGraphicsView, QTextEdit, QMessageBox, QCheckBox
 from pandas import Timestamp
 from PyQt5.QtGui import QFont
 from PyQt5 import uic
@@ -73,7 +73,8 @@ class App(QWidget):
         super().__init__()
         self.password = ''
         self.login = ''
-
+        self.date = []
+        self.date_axis = None
         self.initUI()
         self.graps = {self.list1: self.graph1, self.list2: self.graph2, self.list3: self.graph3,
                       self.list4: self.graph4}
@@ -81,6 +82,14 @@ class App(QWidget):
                            self.list2: (self.date_start2, self.date_end2),
                            self.list3: (self.date_start3, self.date_end3),
                            self.list4: (self.date_start4, self.date_end4)}
+        self.ckecks = {self.list1: (self.check_open_1, self.check_close_1, self.check_high_1),
+                        self.list2: (self.check_open_2, self.check_close_2, self.check_high_2),
+                        self.list3: (self.check_open_3, self.check_close_3, self.check_high_3),
+                        self.list4: (self.check_open_4, self.check_close_4, self.check_high_4)}
+        self.lists = {self.del_btn1: self.list1, self.del_btn2: self.list2, self.del_btn3: self.list3,
+                      self.del_btn4: self.list4}
+        self.db_inf = {self.add_btn1: (1, 'индекс'), self.add_btn2: (2, 'акцию'), self.add_btn3: (3, 'валюту'),
+                  self.add_btn4: (4, 'криптовалюту')}
 
 
     def initUI(self):
@@ -92,21 +101,49 @@ class App(QWidget):
         self.date_start1 = QDateEdit(self)
         self.date_end1 = QDateEdit(self)
         self.add_btn1 = QPushButton('Добавить', self)
+        self.del_btn1 = QPushButton('Удалить', self)
+        self.check_open_1 = QCheckBox('Open', self)
+        self.check_close_1 = QCheckBox('Close', self)
+        self.check_high_1 = QCheckBox('High', self)
+        self.check_open_1.setChecked(True)
+        self.check_close_1.setChecked(True)
+        self.check_high_1.setChecked(True)
         self.graph1 = pg.PlotWidget()
 
         self.date_start2 = QDateEdit(self)
         self.date_end2 = QDateEdit(self)
         self.add_btn2 = QPushButton('Добавить', self)
+        self.del_btn2 = QPushButton('Удалить', self)
+        self.check_open_2 = QCheckBox('Open', self)
+        self.check_close_2 = QCheckBox('Close', self)
+        self.check_high_2 = QCheckBox('High', self)
+        self.check_open_2.setChecked(True)
+        self.check_close_2.setChecked(True)
+        self.check_high_2.setChecked(True)
         self.graph2 = pg.PlotWidget()
 
         self.date_start3 = QDateEdit(self)
         self.date_end3 = QDateEdit(self)
         self.add_btn3 = QPushButton('Добавить', self)
+        self.del_btn3 = QPushButton('Удалить', self)
+        self.check_open_3 = QCheckBox('Open', self)
+        self.check_close_3 = QCheckBox('Close', self)
+        self.check_high_3 = QCheckBox('High', self)
+        self.check_open_3.setChecked(True)
+        self.check_close_3.setChecked(True)
+        self.check_high_3.setChecked(True)
         self.graph3 = pg.PlotWidget()
 
         self.date_start4 = QDateEdit(self)
         self.date_end4 = QDateEdit(self)
         self.add_btn4 = QPushButton('Добавить', self)
+        self.del_btn4 = QPushButton('Удалить', self)
+        self.check_open_4 = QCheckBox('Open', self)
+        self.check_close_4 = QCheckBox('Close', self)
+        self.check_high_4 = QCheckBox('High', self)
+        self.check_open_4.setChecked(True)
+        self.check_close_4.setChecked(True)
+        self.check_high_4.setChecked(True)
         self.graph4 = pg.PlotWidget()
 
         self.grid = QGridLayout()
@@ -123,6 +160,10 @@ class App(QWidget):
         self.tab1.layout.addWidget(QLabel('Конец:', self), 1, 1)
         self.tab1.layout.addWidget(self.graph1, 2, 0)
         self.tab1.layout.addWidget(self.add_btn1, 3, 2)
+        self.tab1.layout.addWidget(self.del_btn1, 4, 2)
+        self.tab1.layout.addWidget(self.check_open_1, 5, 2)
+        self.tab1.layout.addWidget(self.check_close_1, 6, 2)
+        self.tab1.layout.addWidget(self.check_high_1, 7, 2)
 
         self.tab2 = QWidget(self)
         self.tab2.layout = QGridLayout(self)
@@ -135,6 +176,10 @@ class App(QWidget):
         self.tab2.layout.addWidget(QLabel('Конец:', self), 1, 1)
         self.tab2.layout.addWidget(self.graph2, 2, 0)
         self.tab2.layout.addWidget(self.add_btn2, 3, 2)
+        self.tab2.layout.addWidget(self.del_btn2, 4, 2)
+        self.tab2.layout.addWidget(self.check_open_2, 5, 2)
+        self.tab2.layout.addWidget(self.check_close_2, 6, 2)
+        self.tab2.layout.addWidget(self.check_high_2, 7, 2)
 
         self.tab3 = QWidget(self)
         self.tab3.layout = QGridLayout(self)
@@ -147,6 +192,10 @@ class App(QWidget):
         self.tab3.layout.addWidget(QLabel('Конец:', self), 1, 1)
         self.tab3.layout.addWidget(self.graph3, 2, 0)
         self.tab3.layout.addWidget(self.add_btn3, 3, 2)
+        self.tab3.layout.addWidget(self.del_btn3, 4, 2)
+        self.tab3.layout.addWidget(self.check_open_3, 5, 2)
+        self.tab3.layout.addWidget(self.check_close_3, 6, 2)
+        self.tab3.layout.addWidget(self.check_high_3, 7, 2)
 
         self.tab4 = QWidget(self)
         self.tab4.layout = QGridLayout(self)
@@ -159,6 +208,10 @@ class App(QWidget):
         self.tab4.layout.addWidget(QLabel('Конец:', self), 1, 1)
         self.tab4.layout.addWidget(self.graph4, 2, 0)
         self.tab4.layout.addWidget(self.add_btn4, 3, 2)
+        self.tab4.layout.addWidget(self.del_btn4, 4, 2)
+        self.tab4.layout.addWidget(self.check_open_4, 5, 2)
+        self.tab4.layout.addWidget(self.check_close_4, 6, 2)
+        self.tab4.layout.addWidget(self.check_high_4, 7, 2)
 
         self.tab5 = QWidget(self)
         self.tab5.layout = QVBoxLayout(self)
@@ -177,12 +230,32 @@ class App(QWidget):
         self.list4.clicked.connect(self.show_graph)
         self.line_1 = None
         self.line_2 = None
+        self.line_3 = None
         self.graph1.showGrid(x=True, y=True)
+        self.graph2.showGrid(x=True, y=True)
+        self.graph3.showGrid(x=True, y=True)
+        self.graph4.showGrid(x=True, y=True)
+        self.graph1.addLegend()
+        self.graph2.addLegend()
+        self.graph3.addLegend()
+        self.graph4.addLegend()
+        self.add_btn1.clicked.connect(self.add)
+        self.del_btn1.clicked.connect(self.remove)
+        self.add_btn2.clicked.connect(self.add)
+        self.del_btn2.clicked.connect(self.remove)
+        self.add_btn3.clicked.connect(self.add)
+        self.del_btn3.clicked.connect(self.remove)
+        self.add_btn4.clicked.connect(self.add)
+        self.del_btn4.clicked.connect(self.remove)
+
         self.show_list()
 
 
-
     def show_list(self):
+        self.list1.clear()
+        self.list2.clear()
+        self.list3.clear()
+        self.list4.clear()
         indexes_data = cur.execute("""SELECT name FROM market WHERE type = (SELECT id FROM type WHERE name = 'индексы')""").fetchall()
         for i in indexes_data:
             self.list1.addItem(i[0])
@@ -203,6 +276,8 @@ class App(QWidget):
             self.list4.addItem(i[0])
 
 
+
+
     def show_graph(self):
 
         date_edit = self.date_edits[self.sender()]
@@ -211,24 +286,55 @@ class App(QWidget):
         graph = self.graps[self.sender()]
         graph.removeItem(self.line_1)
         graph.removeItem(self.line_2)
+        graph.removeItem(self.line_3)
         cmp = yf.Ticker(self.sender().currentItem().text())
 
         hist = cmp.history(period='1mo', start=start, end=end)
+
         hist['Date'] = hist.index
         dates = hist.loc[:, 'Date'].tolist()
         values_open = hist.loc[:, 'Open'].tolist()
         values_close = hist.loc[:, 'Close'].tolist()
+        values_high = hist.loc[:, 'High'].tolist()
         if values_open and values_close:
-            graph.addLegend()
+            graph.setTitle(self.sender().currentItem().text(), color="w", size="10pt")
+            check_w = self.ckecks[self.sender()]
             graph.getPlotItem().enableAutoRange()
             date_axis = pg.DateAxisItem()
             dates = [datetime.fromtimestamp(x.timestamp()) for x in dates]
-            dates = ["{:%d-%m-%Y}".format(date) for date in dates]
+            dates = ["{:%d.%m.%Y}".format(date) for date in dates]
             ticks = [list(zip(range(len(dates)), tuple(dates)))]
             date_axis.setTicks(ticks)
             graph.setAxisItems({'bottom': date_axis})
-            self.line_1 = graph.plot(y=values_open, pen='g', name='open')
-            self.line_2 = graph.plot(y=values_close, pen='r', name='close')
+            if check_w[0].isChecked():
+                self.line_1 = graph.plot(y=values_open, pen='g', name='open')
+            if check_w[1].isChecked():
+                self.line_2 = graph.plot(y=values_close, pen='r', name='close')
+            if check_w[2].isChecked():
+                self.line_3 = graph.plot(y=values_high, pen='b', name='high')
+
+    def add(self):
+        inf = self.db_inf[self.sender()]
+        text, pressed = QInputDialog.getText(self, "", f"Добавить {inf[1]}:", QLineEdit.Normal, "")
+        while not pressed:
+            text, pressed = QInputDialog.getText(self, "", f"Добавить {inf[1]}:", QLineEdit.Normal, "")
+        cur.execute("INSERT INTO market(name, type) VALUES(?, ?)", (text, inf[0]))
+        con.commit()
+        self.show_list()
+
+    def remove(self):
+        list_w = self.lists[self.sender()]
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.resize(150, 100)
+        text = list_w.currentItem().text()
+        msg.setText(f"Вы дейсвительно хотите удалить {text}?")
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        retval = msg.exec_()
+        if msg.clickedButton().text() == 'OK':
+            cur.execute("DELETE FROM market WHERE name = ?", (text, ))
+            con.commit()
+            self.show_list()
 
 
 
