@@ -333,8 +333,7 @@ class App(QWidget):
     def add(self):
         inf = self.db_inf[self.sender()]
         text, pressed = QInputDialog.getText(self, "", f"Добавить {inf[1]}:", QLineEdit.Normal, "")
-        while not pressed:
-            text, pressed = QInputDialog.getText(self, "", f"Добавить {inf[1]}:", QLineEdit.Normal, "")
+
         cur.execute("INSERT INTO market(name, type) VALUES(?, ?)", (text, inf[0]))
         con.commit()
         self.show_list()
