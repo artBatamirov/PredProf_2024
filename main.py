@@ -259,8 +259,7 @@ class App(QWidget):
         self.line_2 = None
         self.line_3 = None
         self.line_4 = None
-        self.ind_line = None
-        self.ind_line2 = None
+        self.ind_lines = list()
         self.graph1.showGrid(x=True, y=True)
         self.graph2.showGrid(x=True, y=True)
         self.graph3.showGrid(x=True, y=True)
@@ -313,8 +312,18 @@ class App(QWidget):
         self.indicators3.addItems(indicators_data)
         self.indicators4.addItems(indicators_data)
 
-    def show_graph(self):
+    def predict_rsi(self, close, graph):
+        close = numpy.asarray(close)
+        rsi: numpy.ndarray = talib.RSI(close, timeperiod=14)
+        last = rsi[len(rsi) - 1]
+        if last >= 70:
+            graph.setLabel('bottom', 'Тренд будет понижаться в цене')
+        elif last <= 30:
+            graph.setLabel('bottom', 'Тренд будет повышаться в цене')
+        else:
+            graph.setLabel('bottom', 'Цена тренда будет сохраняться')
 
+    def show_graph(self):
         date_edit = self.date_edits[self.sender()]
         start = date_edit[0].date().toString('yyyy-MM-dd')
         end = date_edit[1].date().toString('yyyy-MM-dd')
@@ -323,8 +332,9 @@ class App(QWidget):
         graph.removeItem(self.line_2)
         graph.removeItem(self.line_3)
         graph.removeItem(self.line_4)
-        graph.removeItem(self.ind_line)
-        graph.removeItem(self.ind_line2)
+        for line in self.ind_lines:
+            graph.removeItem(line)
+        self.ind_lines.clear()
         cmp = yf.Ticker(self.sender().currentItem().text())
         hist = cmp.history(period='1mo', start=start, end=end)
 
@@ -354,23 +364,18 @@ class App(QWidget):
                 self.line_4 = graph.plot(y=values_low, pen='m', name='low')
             combobox: QComboBox = self.comboboxes[self.sender()]
             if combobox.currentText() != 'None':
-                if combobox.currentText() == 'ATR':
-                    high, low, close = numpy.asarray(values_high), numpy.asarray(values_low), numpy.asarray(values_close)
-                    atr = talib.ATR(high, low, close, timeperiod=30)
-                    self.ind_line = graph.plot(y=atr, pen='y', name='ATR')
-                elif combobox.currentText() == 'EMA':
+                if combobox.currentText() == 'EMA':
                     close = numpy.asarray(values_close)
                     ema = talib.EMA(close, timeperiod=30)
-                    self.ind_line = graph.plot(y=ema, pen='y', name='EMA')
+                    line = graph.plot(y=ema, pen='w', name='EMA')
+                    self.ind_lines.append(line)
                 elif combobox.currentText() == 'SMA':
                     close = numpy.asarray(values_close)
                     sma = talib.SMA(close, timeperiod=30)
-                    self.ind_line = graph.plot(y=sma, pen='y', name='SMA')
-                elif combobox.currentText() == 'MACD':
-                    close = numpy.asarray(values_close)
-                    macd, macdsignal, _ = talib.MACD(close, fastperiod=15, slowperiod=30, signalperiod=10)
-                    self.ind_line = graph.plot(y=macd, pen='y', name='MACD')
-                    self.ind_line2 = graph.plot(y=macdsignal, pen='w', name='')
+                    line = graph.plot(y=sma, pen='w', name='SMA')
+                    self.ind_lines.append(line)
+
+            self.predict_rsi(values_close, graph)
 
     def add(self):
         inf = self.db_inf[self.sender()]
