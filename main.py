@@ -323,10 +323,40 @@ class App(QWidget):
         else:
             graph.setLabel('bottom', 'Цена тренда будет сохраняться')
 
+    def fibo(self, high, low, graph, hist, day_diff):
+        highest_swing = -1
+        lowest_swing = -1
+        for i in range(1, hist.shape[0] - 1):
+            if high[i] > high[i - 1] and high[i] > high[i + 1] and (
+                    highest_swing == -1 or high[i] > high[highest_swing]):
+                highest_swing = i
+            if low[i] < low[i - 1] and low[i] < low[i + 1] and (
+                    lowest_swing == -1 or low[i] < low[lowest_swing]):
+                lowest_swing = i
+
+        ratios = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1]
+        colors = ["w", "r", "g", "b", "cyan", "magenta", "yellow"]
+        levels = []
+        max_level = high[highest_swing]
+        min_level = low[lowest_swing]
+        for ratio in ratios:
+            if highest_swing > lowest_swing:
+                levels.append(max_level - (max_level - min_level) * ratio)
+            else:
+                levels.append(min_level + (max_level - min_level) * ratio)
+
+        for level, ratio, color in zip(levels, ratios, colors):
+            self.ind_lines.append(graph.plot(y=[level] * day_diff, pen=color, name=f'{round((ratio * 100), 1)} (line)'))
+
     def show_graph(self):
         date_edit = self.date_edits[self.sender()]
         start = date_edit[0].date().toString('yyyy-MM-dd')
         end = date_edit[1].date().toString('yyyy-MM-dd')
+        start_date, end_date = date_edit[0].date(), date_edit[1].date()
+        year_diff = end_date.year() - start_date.year()
+        month_diff = end_date.month() - start_date.month()
+        day_diff = end_date.day() - start_date.day()
+        diff = year_diff * 365 + month_diff * 30 + day_diff
         graph = self.graps[self.sender()]
         graph.removeItem(self.line_1)
         graph.removeItem(self.line_2)
@@ -376,6 +406,7 @@ class App(QWidget):
                     self.ind_lines.append(line)
 
             self.predict_rsi(values_close, graph)
+            self.fibo(values_high, values_low, graph, hist, diff)
 
     def add(self):
         inf = self.db_inf[self.sender()]
