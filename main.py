@@ -93,6 +93,8 @@ class App(QWidget):
                       self.del_btn4: self.list4}
         self.comboboxes = {self.list1: self.indicators1, self.list2: self.indicators2,
                            self.list3: self.indicators3, self.list4: self.indicators4}
+        self.predicts = {self.list1: self.predict1, self.list2: self.predict2, self.list3: self.predict3,
+                         self.list4: self.predict4}
         self.db_inf = {self.add_btn1: (1, 'индекс'), self.add_btn2: (2, 'акцию'), self.add_btn3: (3, 'валюту'),
                   self.add_btn4: (4, 'криптовалюту')}
 
@@ -169,6 +171,7 @@ class App(QWidget):
         self.tab1.setLayout(self.tab1.layout)
         self.list1 = QListWidget(self)
         self.indicators1 = QComboBox(self)
+        self.predict1 = QComboBox(self)
         self.tab1.layout.addWidget(self.indicators1, 0, 0)
         self.tab1.layout.addWidget(self.list1, 2, 2)
         self.tab1.layout.addWidget(self.date_start1, 0, 2)
@@ -176,6 +179,7 @@ class App(QWidget):
         self.tab1.layout.addWidget(self.date_end1, 1, 2)
         self.tab1.layout.addWidget(QLabel('Конец:', self), 1, 1)
         self.tab1.layout.addWidget(self.graph1, 2, 0)
+        self.tab1.layout.addWidget(self.predict1, 3, 0)
         self.tab1.layout.addWidget(self.add_btn1, 3, 2)
         self.tab1.layout.addWidget(self.del_btn1, 4, 2)
         self.tab1.layout.addWidget(self.check_open_1, 5, 1)
@@ -188,6 +192,7 @@ class App(QWidget):
         self.tab2.setLayout(self.tab2.layout)
         self.list2 = QListWidget(self)
         self.indicators2 = QComboBox(self)
+        self.predict2 = QComboBox(self)
         self.tab2.layout.addWidget(self.indicators2, 0, 0)
         self.tab2.layout.addWidget(self.list2, 2, 2)
         self.tab2.layout.addWidget(self.date_start2, 0, 2)
@@ -195,6 +200,7 @@ class App(QWidget):
         self.tab2.layout.addWidget(self.date_end2, 1, 2)
         self.tab2.layout.addWidget(QLabel('Конец:', self), 1, 1)
         self.tab2.layout.addWidget(self.graph2, 2, 0)
+        self.tab2.layout.addWidget(self.predict2, 3, 0)
         self.tab2.layout.addWidget(self.add_btn2, 3, 2)
         self.tab2.layout.addWidget(self.del_btn2, 4, 2)
         self.tab2.layout.addWidget(self.check_open_2, 5, 1)
@@ -207,6 +213,7 @@ class App(QWidget):
         self.tab3.setLayout(self.tab3.layout)
         self.list3 = QListWidget(self)
         self.indicators3 = QComboBox(self)
+        self.predict3 = QComboBox(self)
         self.tab3.layout.addWidget(self.indicators3, 0, 0)
         self.tab3.layout.addWidget(self.list3, 2, 2)
         self.tab3.layout.addWidget(self.date_start3, 0, 2)
@@ -214,6 +221,7 @@ class App(QWidget):
         self.tab3.layout.addWidget(self.date_end3, 1, 2)
         self.tab3.layout.addWidget(QLabel('Конец:', self), 1, 1)
         self.tab3.layout.addWidget(self.graph3, 2, 0)
+        self.tab3.layout.addWidget(self.predict3, 3, 0)
         self.tab3.layout.addWidget(self.add_btn3, 3, 2)
         self.tab3.layout.addWidget(self.del_btn3, 4, 2)
         self.tab3.layout.addWidget(self.check_open_3, 5, 1)
@@ -226,6 +234,7 @@ class App(QWidget):
         self.tab4.setLayout(self.tab4.layout)
         self.list4 = QListWidget(self)
         self.indicators4 = QComboBox(self)
+        self.predict4 = QComboBox(self)
         self.tab4.layout.addWidget(self.indicators4, 0, 0)
         self.tab4.layout.addWidget(self.list4, 2, 2)
         self.tab4.layout.addWidget(self.date_start4, 0, 2)
@@ -233,6 +242,7 @@ class App(QWidget):
         self.tab4.layout.addWidget(self.date_end4, 1, 2)
         self.tab4.layout.addWidget(QLabel('Конец:', self), 1, 1)
         self.tab4.layout.addWidget(self.graph4, 2, 0)
+        self.tab4.layout.addWidget(self.predict4, 3, 0)
         self.tab4.layout.addWidget(self.add_btn4, 3, 2)
         self.tab4.layout.addWidget(self.del_btn4, 4, 2)
         self.tab4.layout.addWidget(self.check_open_4, 5, 1)
@@ -306,22 +316,30 @@ class App(QWidget):
 
         indicators_data = cur.execute(
             """SELECT name FROM market WHERE type = (SELECT id FROM type WHERE name = 'индикаторы')""").fetchall()
-        indicators_data = [indicator[0] for indicator in indicators_data] + ['None']
+        indicators_data = ['None'] + [indicator[0] for indicator in indicators_data]
         self.indicators1.addItems(indicators_data)
         self.indicators2.addItems(indicators_data)
         self.indicators3.addItems(indicators_data)
         self.indicators4.addItems(indicators_data)
+
+        predict_data = cur.execute(
+            """SELECT name FROM market WHERE type = (SELECT id FROM type WHERE name = 'прогноз')""").fetchall()
+        indicators_data = ['None'] + [pred[0] for pred in predict_data]
+        self.predict1.addItems(indicators_data)
+        self.predict2.addItems(indicators_data)
+        self.predict3.addItems(indicators_data)
+        self.predict4.addItems(indicators_data)
 
     def predict_rsi(self, close, graph):
         close = numpy.asarray(close)
         rsi: numpy.ndarray = talib.RSI(close, timeperiod=14)
         last = rsi[len(rsi) - 1]
         if last >= 70:
-            graph.setLabel('bottom', 'Тренд будет понижаться в цене')
+            graph.setLabel('bottom', 'Тренд будет понижаться в цене (RSI)')
         elif last <= 30:
-            graph.setLabel('bottom', 'Тренд будет повышаться в цене')
+            graph.setLabel('bottom', 'Тренд будет повышаться в цене (RSI)')
         else:
-            graph.setLabel('bottom', 'Цена тренда будет сохраняться')
+            graph.setLabel('bottom', 'Цена тренда будет сохраняться (RSI)')
 
     def fibo(self, high, low, graph, hist, day_diff):
         highest_swing = -1
@@ -346,7 +364,23 @@ class App(QWidget):
                 levels.append(min_level + (max_level - min_level) * ratio)
 
         for level, ratio, color in zip(levels, ratios, colors):
-            self.ind_lines.append(graph.plot(y=[level] * day_diff, pen=color, name=f'{round((ratio * 100), 1)} (line)'))
+            self.ind_lines.append(graph.plot(y=[level] * (day_diff - 110), pen=color, name=f'{round((ratio * 100), 1)} (line)'))
+
+        return levels
+
+    def fibo_predict(self, levels, high, graph):
+        last = high[len(high) - 1]
+        prelast = high[len(high) - 2]
+        diffs = [last - level for level in levels]
+        delta = (max(high) - min(high)) // 10
+        absdiffs = list(filter(lambda x: abs(x) < delta, diffs))
+        if absdiffs:
+            if last > prelast:
+                graph.setLabel('bottom', 'Цена будет падать (fibo)')
+            else:
+                graph.setLabel('bottom', 'Цена будет расти (fibo)')
+        else:
+            graph.setLabel('bottom', 'Цена будет сохраняться (fibo)')
 
     def show_graph(self):
         date_edit = self.date_edits[self.sender()]
@@ -362,6 +396,7 @@ class App(QWidget):
         graph.removeItem(self.line_2)
         graph.removeItem(self.line_3)
         graph.removeItem(self.line_4)
+        graph.setLabel('bottom', '')
         for line in self.ind_lines:
             graph.removeItem(line)
         self.ind_lines.clear()
@@ -405,8 +440,13 @@ class App(QWidget):
                     line = graph.plot(y=sma, pen='w', name='SMA')
                     self.ind_lines.append(line)
 
-            self.predict_rsi(values_close, graph)
-            self.fibo(values_high, values_low, graph, hist, diff)
+            levels = self.fibo(values_high, values_low, graph, hist, diff)
+            predict = self.predicts[self.sender()]
+            if predict.currentText() != 'None':
+                if predict.currentText() == 'RSI':
+                    self.predict_rsi(values_close, graph)
+                elif predict.currentText() == 'Fibonacci levels':
+                    self.fibo_predict(levels, values_high, graph)
 
     def add(self):
         inf = self.db_inf[self.sender()]
