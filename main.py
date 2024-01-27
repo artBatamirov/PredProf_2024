@@ -1,7 +1,7 @@
 import sys
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLineEdit, QMainWindow, QTabWidget, QListWidget, \
-    QDateEdit, QLayout, QGraphicsView, QTextEdit, QMessageBox, QCheckBox
+    QDateEdit, QLayout, QGraphicsView, QTextEdit, QMessageBox, QCheckBox, QComboBox
 from pandas import Timestamp
 from PyQt5.QtGui import QFont
 from PyQt5 import uic
@@ -10,6 +10,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QGridLayout, QVBoxLayout
 import yfinance as yf
+import numpy
+import talib
+
 
 from datetime import datetime, timedelta
 import sqlite3
@@ -88,13 +91,13 @@ class App(QWidget):
                         self.list4: (self.check_open_4, self.check_close_4, self.check_high_4, self.check_low_4)}
         self.lists = {self.del_btn1: self.list1, self.del_btn2: self.list2, self.del_btn3: self.list3,
                       self.del_btn4: self.list4}
+        self.comboboxes = {self.list1: self.indicators1, self.list2: self.indicators2,
+                           self.list3: self.indicators3, self.list4: self.indicators4}
         self.db_inf = {self.add_btn1: (1, 'индекс'), self.add_btn2: (2, 'акцию'), self.add_btn3: (3, 'валюту'),
                   self.add_btn4: (4, 'криптовалюту')}
 
 
     def initUI(self):
-
-
         self.setGeometry(900, 400, 600, 600)
         self.setWindowTitle('Биржа')
 
@@ -111,6 +114,7 @@ class App(QWidget):
         self.check_high_1.setChecked(True)
         self.check_low_1.setChecked(True)
         self.graph1 = pg.PlotWidget()
+        self.small_graph1 = pg.PlotWidget()
 
         self.date_start2 = QDateEdit(self)
         self.date_end2 = QDateEdit(self)
@@ -125,6 +129,7 @@ class App(QWidget):
         self.check_high_2.setChecked(True)
         self.check_low_2.setChecked(True)
         self.graph2 = pg.PlotWidget()
+        self.small_graph2 = pg.PlotWidget()
 
         self.date_start3 = QDateEdit(self)
         self.date_end3 = QDateEdit(self)
@@ -139,6 +144,7 @@ class App(QWidget):
         self.check_high_3.setChecked(True)
         self.check_low_3.setChecked(True)
         self.graph3 = pg.PlotWidget()
+        self.small_graph3 = pg.PlotWidget()
 
         self.date_start4 = QDateEdit(self)
         self.date_end4 = QDateEdit(self)
@@ -153,6 +159,7 @@ class App(QWidget):
         self.check_high_4.setChecked(True)
         self.check_low_4.setChecked(True)
         self.graph4 = pg.PlotWidget()
+        self.small_graph4 = pg.PlotWidget()
 
         self.grid = QGridLayout()
         self.tabWidget = QTabWidget(self)
@@ -161,6 +168,8 @@ class App(QWidget):
         self.tab1.layout = QGridLayout(self)
         self.tab1.setLayout(self.tab1.layout)
         self.list1 = QListWidget(self)
+        self.indicators1 = QComboBox(self)
+        self.tab1.layout.addWidget(self.indicators1, 0, 0)
         self.tab1.layout.addWidget(self.list1, 2, 2)
         self.tab1.layout.addWidget(self.date_start1, 0, 2)
         self.tab1.layout.addWidget(QLabel('Начало:', self), 0, 1)
@@ -178,6 +187,8 @@ class App(QWidget):
         self.tab2.layout = QGridLayout(self)
         self.tab2.setLayout(self.tab2.layout)
         self.list2 = QListWidget(self)
+        self.indicators2 = QComboBox(self)
+        self.tab2.layout.addWidget(self.indicators2, 0, 0)
         self.tab2.layout.addWidget(self.list2, 2, 2)
         self.tab2.layout.addWidget(self.date_start2, 0, 2)
         self.tab2.layout.addWidget(QLabel('Начало:', self), 0, 1)
@@ -195,6 +206,8 @@ class App(QWidget):
         self.tab3.layout = QGridLayout(self)
         self.tab3.setLayout(self.tab3.layout)
         self.list3 = QListWidget(self)
+        self.indicators3 = QComboBox(self)
+        self.tab3.layout.addWidget(self.indicators3, 0, 0)
         self.tab3.layout.addWidget(self.list3, 2, 2)
         self.tab3.layout.addWidget(self.date_start3, 0, 2)
         self.tab3.layout.addWidget(QLabel('Начало:', self), 0, 1)
@@ -212,6 +225,8 @@ class App(QWidget):
         self.tab4.layout = QGridLayout(self)
         self.tab4.setLayout(self.tab4.layout)
         self.list4 = QListWidget(self)
+        self.indicators4 = QComboBox(self)
+        self.tab4.layout.addWidget(self.indicators4, 0, 0)
         self.tab4.layout.addWidget(self.list4, 2, 2)
         self.tab4.layout.addWidget(self.date_start4, 0, 2)
         self.tab4.layout.addWidget(QLabel('Начало:', self), 0, 1)
@@ -244,6 +259,8 @@ class App(QWidget):
         self.line_2 = None
         self.line_3 = None
         self.line_4 = None
+        self.ind_line = None
+        self.ind_line2 = None
         self.graph1.showGrid(x=True, y=True)
         self.graph2.showGrid(x=True, y=True)
         self.graph3.showGrid(x=True, y=True)
@@ -288,8 +305,13 @@ class App(QWidget):
         for i in krypto_data:
             self.list4.addItem(i[0])
 
-
-
+        indicators_data = cur.execute(
+            """SELECT name FROM market WHERE type = (SELECT id FROM type WHERE name = 'индикаторы')""").fetchall()
+        indicators_data = [indicator[0] for indicator in indicators_data] + ['None']
+        self.indicators1.addItems(indicators_data)
+        self.indicators2.addItems(indicators_data)
+        self.indicators3.addItems(indicators_data)
+        self.indicators4.addItems(indicators_data)
 
     def show_graph(self):
 
@@ -301,8 +323,9 @@ class App(QWidget):
         graph.removeItem(self.line_2)
         graph.removeItem(self.line_3)
         graph.removeItem(self.line_4)
+        graph.removeItem(self.ind_line)
+        graph.removeItem(self.ind_line2)
         cmp = yf.Ticker(self.sender().currentItem().text())
-
         hist = cmp.history(period='1mo', start=start, end=end)
 
         hist['Date'] = hist.index
@@ -329,6 +352,25 @@ class App(QWidget):
                 self.line_3 = graph.plot(y=values_high, pen='b', name='high')
             if check_w[3].isChecked():
                 self.line_4 = graph.plot(y=values_low, pen='m', name='low')
+            combobox: QComboBox = self.comboboxes[self.sender()]
+            if combobox.currentText() != 'None':
+                if combobox.currentText() == 'ATR':
+                    high, low, close = numpy.asarray(values_high), numpy.asarray(values_low), numpy.asarray(values_close)
+                    atr = talib.ATR(high, low, close, timeperiod=30)
+                    self.ind_line = graph.plot(y=atr, pen='y', name='ATR')
+                elif combobox.currentText() == 'EMA':
+                    close = numpy.asarray(values_close)
+                    ema = talib.EMA(close, timeperiod=30)
+                    self.ind_line = graph.plot(y=ema, pen='y', name='EMA')
+                elif combobox.currentText() == 'SMA':
+                    close = numpy.asarray(values_close)
+                    sma = talib.SMA(close, timeperiod=30)
+                    self.ind_line = graph.plot(y=sma, pen='y', name='SMA')
+                elif combobox.currentText() == 'MACD':
+                    close = numpy.asarray(values_close)
+                    macd, macdsignal, _ = talib.MACD(close, fastperiod=15, slowperiod=30, signalperiod=10)
+                    self.ind_line = graph.plot(y=macd, pen='y', name='MACD')
+                    self.ind_line2 = graph.plot(y=macdsignal, pen='w', name='')
 
     def add(self):
         inf = self.db_inf[self.sender()]
@@ -361,7 +403,6 @@ class App(QWidget):
     def authorize(self):
         self.dialog = Authorize(self)
         self.dialog.show()
-
 
 
 if __name__ == '__main__':
