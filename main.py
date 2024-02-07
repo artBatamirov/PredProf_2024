@@ -22,8 +22,6 @@ con = sqlite3.connect("trade_bd.sqlite")
 
 # Создание курсора
 cur = con.cursor()
-
-
 class Authorize(QWidget):
     def __init__(self, main):
         super().__init__()
@@ -70,7 +68,6 @@ class Authorize(QWidget):
     def register(self):
         password = self.password_edit.text()
         login = self.login_edit.text()
-
 class App(QWidget):
     def __init__(self):
         super().__init__()
@@ -97,6 +94,7 @@ class App(QWidget):
                          self.list4: self.predict4}
         self.db_inf = {self.add_btn1: (1, 'индекс'), self.add_btn2: (2, 'акцию'), self.add_btn3: (3, 'валюту'),
                   self.add_btn4: (4, 'криптовалюту')}
+        self.labels = {self.list1: self.lbl1, self.list2: self.lbl2, self.list3: self.lbl3, self.list4: self.lbl4}
 
 
     def initUI(self):
@@ -172,6 +170,7 @@ class App(QWidget):
         self.list1 = QListWidget(self)
         self.indicators1 = QComboBox(self)
         self.predict1 = QComboBox(self)
+        self.lbl1 = QLabel(self)
         self.tab1.layout.addWidget(self.indicators1, 0, 0)
         self.tab1.layout.addWidget(self.list1, 2, 2)
         self.tab1.layout.addWidget(self.date_start1, 0, 2)
@@ -186,6 +185,7 @@ class App(QWidget):
         self.tab1.layout.addWidget(self.check_close_1, 5, 2)
         self.tab1.layout.addWidget(self.check_high_1, 6, 1)
         self.tab1.layout.addWidget(self.check_low_1, 6, 2)
+        self.tab1.layout.addWidget(self.lbl1, 4, 0)
 
         self.tab2 = QWidget(self)
         self.tab2.layout = QGridLayout(self)
@@ -207,6 +207,8 @@ class App(QWidget):
         self.tab2.layout.addWidget(self.check_close_2, 5, 2)
         self.tab2.layout.addWidget(self.check_high_2, 6, 1)
         self.tab2.layout.addWidget(self.check_low_2, 6, 2)
+        self.lbl2 = QLabel(self)
+        self.tab2.layout.addWidget(self.lbl2, 4, 0)
 
         self.tab3 = QWidget(self)
         self.tab3.layout = QGridLayout(self)
@@ -228,6 +230,8 @@ class App(QWidget):
         self.tab3.layout.addWidget(self.check_close_3, 5, 2)
         self.tab3.layout.addWidget(self.check_high_3, 6, 1)
         self.tab3.layout.addWidget(self.check_low_3, 6, 2)
+        self.lbl3 = QLabel(self)
+        self.tab3.layout.addWidget(self.lbl3, 4, 0)
 
         self.tab4 = QWidget(self)
         self.tab4.layout = QGridLayout(self)
@@ -249,16 +253,18 @@ class App(QWidget):
         self.tab4.layout.addWidget(self.check_close_4, 5, 2)
         self.tab4.layout.addWidget(self.check_high_4, 6, 1)
         self.tab4.layout.addWidget(self.check_low_4, 6, 2)
+        self.lbl4 = QLabel(self)
+        self.tab4.layout.addWidget(self.lbl4, 4, 0)
 
-        self.tab5 = QWidget(self)
-        self.tab5.layout = QVBoxLayout(self)
-        self.tab5.setLayout(self.tab5.layout)
+        # self.tab5 = QWidget(self)
+        # self.tab5.layout = QVBoxLayout(self)
+        # self.tab5.setLayout(self.tab5.layout)
 
         self.tabWidget.addTab(self.tab1, 'Индексы')
         self.tabWidget.addTab(self.tab2, 'Акции')
         self.tabWidget.addTab(self.tab3, 'Валюты')
         self.tabWidget.addTab(self.tab4, 'Криптовалюты')
-        self.tabWidget.addTab(self.tab5, 'Настройки')
+        # self.tabWidget.addTab(self.tab5, 'Настройки')
         self.grid.addWidget(self.tabWidget, 0, 0)
         self.setLayout(self.grid)
         self.list1.clicked.connect(self.show_graph)
@@ -314,6 +320,11 @@ class App(QWidget):
         for i in krypto_data:
             self.list4.addItem(i[0])
 
+        self.indicators1.clear()
+        self.indicators2.clear()
+        self.indicators3.clear()
+        self.indicators4.clear()
+
         indicators_data = cur.execute(
             """SELECT name FROM market WHERE type = (SELECT id FROM type WHERE name = 'индикаторы')""").fetchall()
         indicators_data = ['None'] + [indicator[0] for indicator in indicators_data]
@@ -321,6 +332,11 @@ class App(QWidget):
         self.indicators2.addItems(indicators_data)
         self.indicators3.addItems(indicators_data)
         self.indicators4.addItems(indicators_data)
+
+        self.predict1.clear()
+        self.predict2.clear()
+        self.predict3.clear()
+        self.predict4.clear()
 
         predict_data = cur.execute(
             """SELECT name FROM market WHERE type = (SELECT id FROM type WHERE name = 'прогноз')""").fetchall()
@@ -383,70 +399,78 @@ class App(QWidget):
             graph.setLabel('bottom', 'Цена будет сохраняться (fibo)')
 
     def show_graph(self):
-        date_edit = self.date_edits[self.sender()]
-        start = date_edit[0].date().toString('yyyy-MM-dd')
-        end = date_edit[1].date().toString('yyyy-MM-dd')
-        start_date, end_date = date_edit[0].date(), date_edit[1].date()
-        year_diff = end_date.year() - start_date.year()
-        month_diff = end_date.month() - start_date.month()
-        day_diff = end_date.day() - start_date.day()
-        diff = year_diff * 365 + month_diff * 30 + day_diff
-        graph = self.graps[self.sender()]
-        graph.removeItem(self.line_1)
-        graph.removeItem(self.line_2)
-        graph.removeItem(self.line_3)
-        graph.removeItem(self.line_4)
-        graph.setLabel('bottom', '')
-        for line in self.ind_lines:
-            graph.removeItem(line)
-        self.ind_lines.clear()
-        cmp = yf.Ticker(self.sender().currentItem().text())
-        hist = cmp.history(period='1mo', start=start, end=end)
-
-        hist['Date'] = hist.index
-        dates = hist.loc[:, 'Date'].tolist()
-        values_open = hist.loc[:, 'Open'].tolist()
-        values_close = hist.loc[:, 'Close'].tolist()
-        values_high = hist.loc[:, 'High'].tolist()
-        values_low = hist.loc[:, 'Low'].tolist()
-        if values_open and values_close:
+        try:
+            label = self.labels[self.sender()]
+            label.setText('')
+            date_edit = self.date_edits[self.sender()]
+            start = date_edit[0].date().toString('yyyy-MM-dd')
+            end = date_edit[1].date().toString('yyyy-MM-dd')
+            start_date, end_date = date_edit[0].date(), date_edit[1].date()
+            year_diff = end_date.year() - start_date.year()
+            month_diff = end_date.month() - start_date.month()
+            day_diff = end_date.day() - start_date.day()
+            diff = year_diff * 365 + month_diff * 30 + day_diff
+            graph = self.graps[self.sender()]
+            graph.removeItem(self.line_1)
+            graph.removeItem(self.line_2)
+            graph.removeItem(self.line_3)
+            graph.removeItem(self.line_4)
+            graph.setLabel('bottom', '')
+            for line in self.ind_lines:
+                graph.removeItem(line)
+            self.ind_lines.clear()
+            cmp = yf.Ticker(self.sender().currentItem().text())
+            hist = cmp.history(period='1mo', start=start, end=end)
             graph.setTitle(self.sender().currentItem().text(), color="w", size="10pt")
-            check_w = self.ckecks[self.sender()]
-            graph.getPlotItem().enableAutoRange()
-            date_axis = pg.DateAxisItem()
-            dates = [datetime.fromtimestamp(x.timestamp()) for x in dates]
-            dates = ["{:%d.%m.%Y}".format(date) for date in dates]
-            ticks = [list(zip(range(len(dates)), tuple(dates)))]
-            date_axis.setTicks(ticks)
-            graph.setAxisItems({'bottom': date_axis})
-            if check_w[0].isChecked():
-                self.line_1 = graph.plot(y=values_open, pen='g', name='open')
-            if check_w[1].isChecked():
-                self.line_2 = graph.plot(y=values_close, pen='r', name='close')
-            if check_w[2].isChecked():
-                self.line_3 = graph.plot(y=values_high, pen='b', name='high')
-            if check_w[3].isChecked():
-                self.line_4 = graph.plot(y=values_low, pen='m', name='low')
-            combobox: QComboBox = self.comboboxes[self.sender()]
-            if combobox.currentText() != 'None':
-                if combobox.currentText() == 'EMA':
-                    close = numpy.asarray(values_close)
-                    ema = talib.EMA(close, timeperiod=30)
-                    line = graph.plot(y=ema, pen='w', name='EMA')
-                    self.ind_lines.append(line)
-                elif combobox.currentText() == 'SMA':
-                    close = numpy.asarray(values_close)
-                    sma = talib.SMA(close, timeperiod=30)
-                    line = graph.plot(y=sma, pen='w', name='SMA')
-                    self.ind_lines.append(line)
+            if 'Empty DataFrame' in str(hist):
+                label.setText('Нет данных')
+            hist['Date'] = hist.index
 
-            levels = self.fibo(values_high, values_low, graph, hist, diff)
-            predict = self.predicts[self.sender()]
-            if predict.currentText() != 'None':
-                if predict.currentText() == 'RSI':
-                    self.predict_rsi(values_close, graph)
-                elif predict.currentText() == 'Fibonacci levels':
-                    self.fibo_predict(levels, values_high, graph)
+            dates = hist.loc[:, 'Date'].tolist()
+            values_open = hist.loc[:, 'Open'].tolist()
+            values_close = hist.loc[:, 'Close'].tolist()
+            values_high = hist.loc[:, 'High'].tolist()
+            values_low = hist.loc[:, 'Low'].tolist()
+            if values_open and values_close:
+                # graph.setTitle(self.sender().currentItem().text(), color="w", size="10pt")
+                check_w = self.ckecks[self.sender()]
+                graph.getPlotItem().enableAutoRange()
+                date_axis = pg.DateAxisItem()
+                dates = [datetime.fromtimestamp(x.timestamp()) for x in dates]
+                dates = ["{:%d.%m.%Y}".format(date) for date in dates]
+                ticks = [list(zip(range(len(dates)), tuple(dates)))]
+                date_axis.setTicks(ticks)
+                graph.setAxisItems({'bottom': date_axis})
+                if check_w[0].isChecked():
+                    self.line_1 = graph.plot(y=values_open, pen='g', name='open')
+                if check_w[1].isChecked():
+                    self.line_2 = graph.plot(y=values_close, pen='r', name='close')
+                if check_w[2].isChecked():
+                    self.line_3 = graph.plot(y=values_high, pen='b', name='high')
+                if check_w[3].isChecked():
+                    self.line_4 = graph.plot(y=values_low, pen='m', name='low')
+                combobox: QComboBox = self.comboboxes[self.sender()]
+                if combobox.currentText() != 'None':
+                    if combobox.currentText() == 'EMA':
+                        close = numpy.asarray(values_close)
+                        ema = talib.EMA(close, timeperiod=30)
+                        line = graph.plot(y=ema, pen='w', name='EMA')
+                        self.ind_lines.append(line)
+                    elif combobox.currentText() == 'SMA':
+                        close = numpy.asarray(values_close)
+                        sma = talib.SMA(close, timeperiod=30)
+                        line = graph.plot(y=sma, pen='w', name='SMA')
+                        self.ind_lines.append(line)
+
+                levels = self.fibo(values_high, values_low, graph, hist, diff)
+                predict = self.predicts[self.sender()]
+                if predict.currentText() != 'None':
+                    if predict.currentText() == 'RSI':
+                        self.predict_rsi(values_close, graph)
+                    elif predict.currentText() == 'Fibonacci levels':
+                        self.fibo_predict(levels, values_high, graph)
+        except Exception as e:
+            print(e)
 
     def add(self):
         inf = self.db_inf[self.sender()]
