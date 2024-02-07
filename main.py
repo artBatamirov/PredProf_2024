@@ -71,6 +71,7 @@ class Authorize(QWidget):
         password = self.password_edit.text()
         login = self.login_edit.text()
 
+
 class App(QWidget):
     def __init__(self):
         super().__init__()
@@ -335,11 +336,11 @@ class App(QWidget):
         rsi: numpy.ndarray = talib.RSI(close, timeperiod=14)
         last = rsi[len(rsi) - 1]
         if last >= 70:
-            graph.setLabel('bottom', 'Тренд будет понижаться в цене (RSI)')
+            graph.setLabel('bottom', 'Тренд изменится на понижение (RSI)')
         elif last <= 30:
-            graph.setLabel('bottom', 'Тренд будет повышаться в цене (RSI)')
+            graph.setLabel('bottom', 'Тренд изменится на повышение (RSI)')
         else:
-            graph.setLabel('bottom', 'Цена тренда будет сохраняться (RSI)')
+            graph.setLabel('bottom', 'Тренд будет сохраняться (RSI)')
 
     def fibo(self, high, low, graph, hist, day_diff):
         highest_swing = -1
